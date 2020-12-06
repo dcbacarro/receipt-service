@@ -3,17 +3,18 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const moment = require('moment');
+const { execFile } = require('child_process');
 
 const app = express();
 
 const printer = (data) => {
   const line = Array(40).fill('-').join('');
   const encoder = new EscPosEncoder();
-  const { transactionData: t, tansactionItems: i } = data;
+  const { transactionData: t, transactionItems: i } = data;
   encoder
     .initialize()
     .codepage('windows1251')
-    .raw([0x1b, 0x70, 0x00, 0x19, 0xfa])
+    .raw([0x1B, 0x70, 0x30, 0x37, 0x79])
     .align('center')
     .bold(true)
     .text('Los Manggalenos Store')
@@ -23,6 +24,7 @@ const printer = (data) => {
     .newline()
     .text('Sariaya, Quezon')
     .newline()
+    .align('left')
     .text(line)
     .newline()
     .text(`Receipt No.: ${t.transactionNumber}`)
@@ -45,7 +47,7 @@ const printer = (data) => {
       .text(t)
       .newline();
   });
-
+  const filename = `${t.transactionNumber}`.split('-').join('').padStart(12, '0');
   encoder
     .text(line)
     .newline()
@@ -56,39 +58,45 @@ const printer = (data) => {
     .text(parseFloat(`${t.totalAmount}`).toFixed(2).padStart(20, ' '))
     .newline()
     .newline()
+    .bold(true)
     .text('Net Total:          ')
-    .newline()
     .text(parseFloat(`${t.netTotal}`).toFixed(2).padStart(20, ' '))
     .newline()
+    .bold(false)
     .text('Cash Tendered:      ')
-    .newline()
     .text(parseFloat(`${t.amountTendered}`).toFixed(2).padStart(20, ' '))
     .newline()
+    .bold(true)
     .text('Change Due:         ')
-    .newline()
     .text(parseFloat(`${t.tenderChange}`).toFixed(2).padStart(20, ' '))
     .newline()
     .newline()
     .newline()
     .align('center')
+    .bold(false)
+    .text('THIS IS NOT AN OFFICIAL RECEIPT')
+    .newline()
     .text('Thank you for shopping with us!')
     .newline()
     .text(moment().format('MMMM DD, YYYY HH:mm:ss'))
     .newline()
     .newline()
-    .barcode(`${t.transactionNumber}`.split('-').join('').padStart(12, '0'), 'ean13', 60)
+    .barcode(filename, 'ean13', 60)
     .newline()
     .newline();
 
   const result = encoder.encode();
 
-  fs.writeFile('./receipt.bin', result, () => {});
+  const path = `./${filename}.bin`;
+  fs.writeFile(path, result, () => {
+    execFile('print', [path]);
+  });
 }
 
 app.use(bodyParser.json());
 
 app.post('/', async (req, res) => {
-  printer();
+  printer(req.body);
   res.json({ success: true });
 });
 

@@ -1,2 +1,4 @@
 /node_modules
 receipt.bin
+
+*.bin
