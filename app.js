@@ -17,7 +17,7 @@ const opener = () => {
 
   const path = `opener.bin`;
   fs.writeFile(path, code, () => {
-    execFile('print', [path]);
+    execFile('print', [path], { windowsHide: true });
   });
 }
 
@@ -109,7 +109,7 @@ const printer = (data) => {
 
   const path = `${filename}.bin`;
   fs.writeFile(path, result, () => {
-    execFile('print', [path]);
+    execFile('print', [path], { windowsHide: true });
   });
 }
 
