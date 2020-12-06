@@ -78,16 +78,22 @@ const printer = (data) => {
     .newline()
     .text('Thank you for shopping with us!')
     .newline()
-    .text(moment().format('MMMM DD, YYYY HH:mm:ss'))
+    .text(moment().format('MMMM DD, YYYY hh:mm:ss A'))
     .newline()
     .newline()
     .barcode(filename, 'ean13', 60)
+    .newline()
+    .newline()
+    .newline()
+    .newline()
+    .newline()
+    .newline()
     .newline()
     .newline();
 
   const result = encoder.encode();
 
-  const path = `./${filename}.bin`;
+  const path = `${filename}.bin`;
   fs.writeFile(path, result, () => {
     execFile('print', [path]);
   });
