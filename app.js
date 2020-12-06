@@ -7,6 +7,20 @@ const { execFile } = require('child_process');
 
 const app = express();
 
+const opener = () => {
+  const encoder = new EscPosEncoder();
+  const code = encoder
+    .initialize()
+    .codepage('windows1251')
+    .raw([0x1B, 0x70, 0x30, 0x37, 0x79])
+    .encode();
+
+  const path = `opener.bin`;
+  fs.writeFile(path, code, () => {
+    execFile('print', [path]);
+  });
+}
+
 const printer = (data) => {
   const line = Array(40).fill('-').join('');
   const encoder = new EscPosEncoder();
@@ -103,6 +117,12 @@ app.use(bodyParser.json());
 
 app.post('/', async (req, res) => {
   printer(req.body);
+  res.json({ success: true });
+});
+
+
+app.get('/open', async (req, res) => {
+  opener();
   res.json({ success: true });
 });
 
