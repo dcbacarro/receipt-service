@@ -23,92 +23,47 @@ const opener = () => {
 
 const printer = (data) => {
   const line = Array(40).fill('-').join('');
-  const encoder = new EscPosEncoder();
   const { transactionData: t, transactionItems: i } = data;
-  encoder
-    .initialize()
-    .codepage('windows1251')
-    .raw([0x1B, 0x70, 0x30, 0x37, 0x79])
-    .align('center')
-    .bold(true)
-    .text('Los Manggalenos Store')
-    .newline()
-    .bold(false)
-    .text('Brgy. Manggalang I,')
-    .newline()
-    .text('Sariaya, Quezon')
-    .newline()
-    .align('left')
-    .text(line)
-    .newline()
-    .text(`Receipt No.: ${t.transactionNumber}`)
-    .newline()
-    .text(`Cashier: ${t.cashier}`)
-    .newline()
-    .text(`Customer: ${t.customer === 'DEFAULT CUSTOMER' ? 'Walk In' : t.customer}`)
-    .newline()
-    .text(line)
-    .newline();
+  opener();
+
+  let text = '         Los Manggalenos Store\n';
+  text += '          Brgy. Manggalang I,\n';
+  text += '             Sariaya, Quezon\n';
+  text += line + '\n';
+  text += `Receipt No.: ${t.transactionNumber}\n`;
+  text += `Cashier: ${t.cashier}\n`;
+  text += `Customer: ${t.customer === 'DEFAULT CUSTOMER' ? 'Walk In' : t.customer}\n`;
+  text += line + '\n';
 
   i.forEach((item) => {
     const qp = `${item.qty} X ${parseFloat(`${item.unit_price}`).toFixed(2)}`.padEnd(20, ' ');
     const t = parseFloat(`${item.total_price}`).toFixed(2).padStart(20, ' ');
 
-    encoder
-      .text(item.description, 40)
-      .newline()
-      .text(qp)
-      .text(t)
-      .newline();
+    text += item.description + '\n';
+    text += `${qp}${t}\n`;
   });
+
+  text += line + '\n';
+  text += 'Sub-total:          ';
+  text += parseFloat(`${t.totalAmount}`).toFixed(2).padStart(20, ' ');
+  text += '\nLess Discount:      ';
+  text += parseFloat(`${t.totalAmount}`).toFixed(2).padStart(20, ' ');
+  text += '\nNet Total:          ';
+  text += parseFloat(`${t.netTotal}`).toFixed(2).padStart(20, ' ');
+  text += '\nCash Tendered:      ';
+  text += parseFloat(`${t.amountTendered}`).toFixed(2).padStart(20, ' ');
+  text += '\nChange Due:         ';
+  text += parseFloat(`${t.tenderChange}`).toFixed(2).padStart(20, ' ');
+
+  text += '\n\n     THIS IS NOT AN OFFICIAL RECEIPT\n\n';
+  text += '     Thank you for shopping with us!\n\n';
+  text += '        ' + moment().format('MMM DD, YYYY hh:mm:ss A');
+  text += '\n\n\n\n\n\n'
+
   const filename = `${t.transactionNumber}`.split('-').join('').padStart(12, '0');
-  encoder
-    .text(line)
-    .newline()
-    .text('Sub-total:          ')
-    .text(parseFloat(`${t.totalAmount}`).toFixed(2).padStart(20, ' '))
-    .newline()
-    .text('Less Discount:      ')
-    .text(parseFloat(`${t.totalAmount}`).toFixed(2).padStart(20, ' '))
-    .newline()
-    .newline()
-    .bold(true)
-    .text('Net Total:          ')
-    .text(parseFloat(`${t.netTotal}`).toFixed(2).padStart(20, ' '))
-    .newline()
-    .bold(false)
-    .text('Cash Tendered:      ')
-    .text(parseFloat(`${t.amountTendered}`).toFixed(2).padStart(20, ' '))
-    .newline()
-    .bold(true)
-    .text('Change Due:         ')
-    .text(parseFloat(`${t.tenderChange}`).toFixed(2).padStart(20, ' '))
-    .newline()
-    .newline()
-    .newline()
-    .align('center')
-    .bold(false)
-    .text('THIS IS NOT AN OFFICIAL RECEIPT')
-    .newline()
-    .text('Thank you for shopping with us!')
-    .newline()
-    .text(moment().format('MMMM DD, YYYY hh:mm:ss A'))
-    .newline()
-    .newline()
-    .barcode(filename, 'ean13', 60)
-    .newline()
-    .newline()
-    .newline()
-    .newline()
-    .newline()
-    .newline()
-    .newline()
-    .newline();
 
-  const result = encoder.encode();
-
-  const path = `${filename}.bin`;
-  fs.writeFile(path, result, () => {
+  const path = `${filename}.txt`;
+  fs.writeFile(path, text, () => {
     execFile('print', [path], { windowsHide: true });
   });
 }
